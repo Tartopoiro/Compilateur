@@ -335,6 +335,29 @@ char * type2string (int c) {
     }  
 };
 
+int expressionPrinter(int t1, char * op, int t2){
+  //Si les types different alors float obligatoire
+  if(t1 != t2){
+    if(t1 != INT){
+      printf("I2F2\n");
+    }else if(t2 != INT){
+      printf("I2F1\n");
+    }else{
+      printf("!!! CAST ERROR IN EXPRESSION PRINTER !!!");
+    }
+    printf("%sF\n",op);
+    return FLOAT;
+  //identique et INT
+  }else if(t1 == INT){
+    printf("%sI\n",op);
+    return INT;
+  //identique et float
+  }else{
+    printf("%sF\n",op);
+    return FLOAT;
+  }
+}
+
  // dirty trick to end function init_glob_var() definition (see rule po : PO)
 void end_glob_var_decl(){
   static int unfinished=1;
@@ -348,7 +371,7 @@ void end_glob_var_decl(){
  
   
 
-#line 352 "y.tab.c"
+#line 375 "y.tab.c"
 
 
 #ifdef short
@@ -733,14 +756,14 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] =
 {
-       0,    97,    97,   100,   103,   104,   108,   109,   114,   117,
-     119,   125,   131,   132,   135,   138,   141,   143,   149,   154,
-     155,   158,   161,   164,   165,   169,   173,   174,   175,   180,
-     181,   184,   188,   189,   190,   191,   192,   193,   194,   199,
-     202,   208,   213,   214,   223,   226,   227,   230,   233,   236,
-     241,   244,   246,   254,   256,   257,   258,   259,   260,   261,
-     262,   263,   264,   269,   270,   271,   272,   273,   274,   275,
-     282,   285,   287,   288,   291,   292
+       0,   120,   120,   123,   126,   127,   131,   132,   137,   140,
+     142,   148,   154,   155,   158,   161,   164,   166,   172,   177,
+     178,   181,   184,   187,   188,   192,   196,   197,   198,   203,
+     204,   207,   211,   212,   213,   214,   215,   216,   217,   222,
+     225,   231,   236,   237,   246,   249,   250,   253,   256,   259,
+     264,   267,   269,   277,   279,   280,   281,   282,   283,   284,
+     285,   286,   287,   292,   293,   294,   295,   296,   297,   298,
+     305,   308,   310,   311,   314,   315
 };
 #endif
 
@@ -1403,459 +1426,459 @@ yyreduce:
   switch (yyn)
     {
   case 2: /* prog: glob_decl_list  */
-#line 97 "lang.y"
+#line 120 "lang.y"
                                    {}
-#line 1409 "y.tab.c"
+#line 1432 "y.tab.c"
     break;
 
   case 3: /* glob_decl_list: glob_var_list glob_fun_list  */
-#line 100 "lang.y"
+#line 123 "lang.y"
                                              {}
-#line 1415 "y.tab.c"
+#line 1438 "y.tab.c"
     break;
 
   case 4: /* glob_var_list: glob_var_list decl PV  */
-#line 103 "lang.y"
+#line 126 "lang.y"
                                       {}
-#line 1421 "y.tab.c"
+#line 1444 "y.tab.c"
     break;
 
   case 5: /* glob_var_list: %empty  */
-#line 104 "lang.y"
+#line 127 "lang.y"
   {printf("void init_glob_var(){\n"); // starting  function init_glob_var() definition in target code
  }
-#line 1428 "y.tab.c"
+#line 1451 "y.tab.c"
     break;
 
   case 6: /* glob_fun_list: glob_fun_list fun  */
-#line 108 "lang.y"
+#line 131 "lang.y"
                                   {}
-#line 1434 "y.tab.c"
+#line 1457 "y.tab.c"
     break;
 
   case 7: /* glob_fun_list: fun  */
-#line 109 "lang.y"
+#line 132 "lang.y"
       {}
-#line 1440 "y.tab.c"
+#line 1463 "y.tab.c"
     break;
 
   case 8: /* fun: type fun_head fun_body  */
-#line 114 "lang.y"
+#line 137 "lang.y"
                                {}
-#line 1446 "y.tab.c"
+#line 1469 "y.tab.c"
     break;
 
   case 9: /* po: PO  */
-#line 117 "lang.y"
+#line 140 "lang.y"
        {end_glob_var_decl();}
-#line 1452 "y.tab.c"
+#line 1475 "y.tab.c"
     break;
 
   case 10: /* fun_head: ID po PF  */
-#line 119 "lang.y"
+#line 142 "lang.y"
                                {
   // Pas de déclaration de fonction à l'intérieur de fonctions !
   if (depth>0) yyerror("Function must be declared at top level~!\n");
   else printf("void pcode_%s()\n",(yyvsp[-2].string_value));
   }
-#line 1462 "y.tab.c"
+#line 1485 "y.tab.c"
     break;
 
   case 11: /* fun_head: ID po params PF  */
-#line 125 "lang.y"
+#line 148 "lang.y"
                                {
    // Pas de déclaration de fonction à l'intérieur de fonctions !
   if (depth>0) yyerror("Function must be declared at top level~!\n");
  }
-#line 1471 "y.tab.c"
+#line 1494 "y.tab.c"
     break;
 
   case 12: /* params: type ID vir params  */
-#line 131 "lang.y"
+#line 154 "lang.y"
                                {}
-#line 1477 "y.tab.c"
+#line 1500 "y.tab.c"
     break;
 
   case 13: /* params: type ID  */
-#line 132 "lang.y"
+#line 155 "lang.y"
                                {}
-#line 1483 "y.tab.c"
+#line 1506 "y.tab.c"
     break;
 
   case 14: /* vir: VIR  */
-#line 135 "lang.y"
+#line 158 "lang.y"
                                {}
-#line 1489 "y.tab.c"
+#line 1512 "y.tab.c"
     break;
 
   case 15: /* fun_body: fao block faf  */
-#line 138 "lang.y"
+#line 161 "lang.y"
                                {}
-#line 1495 "y.tab.c"
+#line 1518 "y.tab.c"
     break;
 
   case 16: /* fao: AO  */
-#line 141 "lang.y"
+#line 164 "lang.y"
                                {printf("{\n");}
-#line 1501 "y.tab.c"
+#line 1524 "y.tab.c"
     break;
 
   case 17: /* faf: AF  */
-#line 143 "lang.y"
+#line 166 "lang.y"
                                {printf("}\n");}
-#line 1507 "y.tab.c"
+#line 1530 "y.tab.c"
     break;
 
   case 18: /* block: decl_list inst_list  */
-#line 149 "lang.y"
+#line 172 "lang.y"
                                {}
-#line 1513 "y.tab.c"
+#line 1536 "y.tab.c"
     break;
 
   case 19: /* decl_list: decl_list decl PV  */
-#line 154 "lang.y"
+#line 177 "lang.y"
                                 {}
-#line 1519 "y.tab.c"
+#line 1542 "y.tab.c"
     break;
 
   case 20: /* decl_list: %empty  */
-#line 155 "lang.y"
+#line 178 "lang.y"
                                 {}
-#line 1525 "y.tab.c"
+#line 1548 "y.tab.c"
     break;
 
   case 21: /* decl: var_decl  */
-#line 158 "lang.y"
+#line 181 "lang.y"
                                 {}
-#line 1531 "y.tab.c"
+#line 1554 "y.tab.c"
     break;
 
   case 22: /* var_decl: type vlist  */
-#line 161 "lang.y"
+#line 184 "lang.y"
                                {}
-#line 1537 "y.tab.c"
+#line 1560 "y.tab.c"
     break;
 
   case 23: /* vlist: vlist vir ID  */
-#line 164 "lang.y"
+#line 187 "lang.y"
                                {}
-#line 1543 "y.tab.c"
+#line 1566 "y.tab.c"
     break;
 
   case 24: /* vlist: ID  */
-#line 165 "lang.y"
+#line 188 "lang.y"
                                {}
-#line 1549 "y.tab.c"
+#line 1572 "y.tab.c"
     break;
 
   case 25: /* type: typename  */
-#line 169 "lang.y"
+#line 192 "lang.y"
                                {(yyval.type_value)=(yyvsp[0].type_value);}
-#line 1555 "y.tab.c"
+#line 1578 "y.tab.c"
     break;
 
   case 26: /* typename: INT  */
-#line 173 "lang.y"
+#line 196 "lang.y"
                                {(yyval.type_value)=INT;}
-#line 1561 "y.tab.c"
+#line 1584 "y.tab.c"
     break;
 
   case 27: /* typename: FLOAT  */
-#line 174 "lang.y"
+#line 197 "lang.y"
                                {(yyval.type_value)=FLOAT;}
-#line 1567 "y.tab.c"
+#line 1590 "y.tab.c"
     break;
 
   case 28: /* typename: VOID  */
-#line 175 "lang.y"
+#line 198 "lang.y"
                                {(yyval.type_value)=VOID;}
-#line 1573 "y.tab.c"
+#line 1596 "y.tab.c"
     break;
 
   case 29: /* inst_list: inst_list inst  */
-#line 180 "lang.y"
+#line 203 "lang.y"
                             {}
-#line 1579 "y.tab.c"
+#line 1602 "y.tab.c"
     break;
 
   case 30: /* inst_list: inst  */
-#line 181 "lang.y"
+#line 204 "lang.y"
                             {}
-#line 1585 "y.tab.c"
+#line 1608 "y.tab.c"
     break;
 
   case 31: /* pv: PV  */
-#line 184 "lang.y"
+#line 207 "lang.y"
                               {}
-#line 1591 "y.tab.c"
+#line 1614 "y.tab.c"
     break;
 
   case 32: /* inst: ao block af  */
-#line 188 "lang.y"
+#line 211 "lang.y"
                               {}
-#line 1597 "y.tab.c"
+#line 1620 "y.tab.c"
     break;
 
   case 33: /* inst: exp pv  */
-#line 189 "lang.y"
+#line 212 "lang.y"
                               {}
-#line 1603 "y.tab.c"
+#line 1626 "y.tab.c"
     break;
 
   case 34: /* inst: aff pv  */
-#line 190 "lang.y"
+#line 213 "lang.y"
                               {}
-#line 1609 "y.tab.c"
+#line 1632 "y.tab.c"
     break;
 
   case 35: /* inst: ret pv  */
-#line 191 "lang.y"
+#line 214 "lang.y"
                               {}
-#line 1615 "y.tab.c"
+#line 1638 "y.tab.c"
     break;
 
   case 36: /* inst: cond  */
-#line 192 "lang.y"
+#line 215 "lang.y"
                               {}
-#line 1621 "y.tab.c"
+#line 1644 "y.tab.c"
     break;
 
   case 37: /* inst: loop  */
-#line 193 "lang.y"
+#line 216 "lang.y"
                               {}
-#line 1627 "y.tab.c"
+#line 1650 "y.tab.c"
     break;
 
   case 38: /* inst: pv  */
-#line 194 "lang.y"
+#line 217 "lang.y"
                               {}
-#line 1633 "y.tab.c"
+#line 1656 "y.tab.c"
     break;
 
   case 39: /* ao: AO  */
-#line 199 "lang.y"
+#line 222 "lang.y"
                               {}
-#line 1639 "y.tab.c"
+#line 1662 "y.tab.c"
     break;
 
   case 40: /* af: AF  */
-#line 202 "lang.y"
+#line 225 "lang.y"
                               {}
-#line 1645 "y.tab.c"
+#line 1668 "y.tab.c"
     break;
 
   case 41: /* aff: ID EQ exp  */
-#line 208 "lang.y"
+#line 231 "lang.y"
                               {}
-#line 1651 "y.tab.c"
+#line 1674 "y.tab.c"
     break;
 
   case 42: /* ret: RETURN exp  */
-#line 213 "lang.y"
+#line 236 "lang.y"
                               {}
-#line 1657 "y.tab.c"
+#line 1680 "y.tab.c"
     break;
 
   case 43: /* ret: RETURN PO PF  */
-#line 214 "lang.y"
+#line 237 "lang.y"
                               {}
-#line 1663 "y.tab.c"
+#line 1686 "y.tab.c"
     break;
 
   case 44: /* cond: if bool_cond inst elsop  */
-#line 223 "lang.y"
+#line 246 "lang.y"
                                {}
-#line 1669 "y.tab.c"
+#line 1692 "y.tab.c"
     break;
 
   case 45: /* elsop: else inst  */
-#line 226 "lang.y"
+#line 249 "lang.y"
                                {}
-#line 1675 "y.tab.c"
+#line 1698 "y.tab.c"
     break;
 
   case 46: /* elsop: %empty  */
-#line 227 "lang.y"
+#line 250 "lang.y"
                                {}
-#line 1681 "y.tab.c"
+#line 1704 "y.tab.c"
     break;
 
   case 47: /* bool_cond: PO exp PF  */
-#line 230 "lang.y"
+#line 253 "lang.y"
                               {}
-#line 1687 "y.tab.c"
+#line 1710 "y.tab.c"
     break;
 
   case 48: /* if: IF  */
-#line 233 "lang.y"
+#line 256 "lang.y"
                               {}
-#line 1693 "y.tab.c"
+#line 1716 "y.tab.c"
     break;
 
   case 49: /* else: ELSE  */
-#line 236 "lang.y"
+#line 259 "lang.y"
                               {}
-#line 1699 "y.tab.c"
+#line 1722 "y.tab.c"
     break;
 
   case 50: /* loop: while while_cond inst  */
-#line 241 "lang.y"
+#line 264 "lang.y"
                               {}
-#line 1705 "y.tab.c"
+#line 1728 "y.tab.c"
     break;
 
   case 51: /* while_cond: PO exp PF  */
-#line 244 "lang.y"
+#line 267 "lang.y"
                               {}
-#line 1711 "y.tab.c"
+#line 1734 "y.tab.c"
     break;
 
   case 52: /* while: WHILE  */
-#line 246 "lang.y"
+#line 269 "lang.y"
                               {}
-#line 1717 "y.tab.c"
+#line 1740 "y.tab.c"
     break;
 
   case 53: /* exp: MOINS exp  */
-#line 254 "lang.y"
+#line 277 "lang.y"
                               {}
-#line 1723 "y.tab.c"
+#line 1746 "y.tab.c"
     break;
 
   case 54: /* exp: exp PLUS exp  */
-#line 256 "lang.y"
-                              {printf("ADD\n");}
-#line 1729 "y.tab.c"
+#line 279 "lang.y"
+                              {(yyval.type_value)=expressionPrinter((yyvsp[-2].type_value),"ADD",(yyvsp[0].type_value));}
+#line 1752 "y.tab.c"
     break;
 
   case 55: /* exp: exp MOINS exp  */
-#line 257 "lang.y"
-                              {printf("SUB\n");}
-#line 1735 "y.tab.c"
+#line 280 "lang.y"
+                              {(yyval.type_value)=expressionPrinter((yyvsp[-2].type_value),"SUB",(yyvsp[0].type_value));}
+#line 1758 "y.tab.c"
     break;
 
   case 56: /* exp: exp STAR exp  */
-#line 258 "lang.y"
-                              {printf("MULT\n");}
-#line 1741 "y.tab.c"
+#line 281 "lang.y"
+                              {(yyval.type_value)=expressionPrinter((yyvsp[-2].type_value),"MULT",(yyvsp[0].type_value));}
+#line 1764 "y.tab.c"
     break;
 
   case 57: /* exp: exp DIV exp  */
-#line 259 "lang.y"
-                              {printf("DIV\n");}
-#line 1747 "y.tab.c"
+#line 282 "lang.y"
+                              {(yyval.type_value)=expressionPrinter((yyvsp[-2].type_value),"DIV",(yyvsp[0].type_value));}
+#line 1770 "y.tab.c"
     break;
 
   case 58: /* exp: PO exp PF  */
-#line 260 "lang.y"
+#line 283 "lang.y"
                               {}
-#line 1753 "y.tab.c"
+#line 1776 "y.tab.c"
     break;
 
   case 59: /* exp: ID  */
-#line 261 "lang.y"
+#line 284 "lang.y"
                               {}
-#line 1759 "y.tab.c"
+#line 1782 "y.tab.c"
     break;
 
   case 60: /* exp: app  */
-#line 262 "lang.y"
+#line 285 "lang.y"
                               {}
-#line 1765 "y.tab.c"
+#line 1788 "y.tab.c"
     break;
 
   case 61: /* exp: NUM  */
-#line 263 "lang.y"
-                              {printf("LOADI %d\n",(yyvsp[0].int_value));}
-#line 1771 "y.tab.c"
+#line 286 "lang.y"
+                              {printf("LOADI(%d)\n",(yyvsp[0].int_value));(yyval.type_value)=INT;}
+#line 1794 "y.tab.c"
     break;
 
   case 62: /* exp: DEC  */
-#line 264 "lang.y"
-                              {printf("LOADF %f\n",(yyvsp[0].float_value));}
-#line 1777 "y.tab.c"
+#line 287 "lang.y"
+                              {printf("LOADF(%f)\n",(yyvsp[0].float_value));(yyval.type_value)=FLOAT;}
+#line 1800 "y.tab.c"
     break;
 
   case 63: /* exp: NOT exp  */
-#line 269 "lang.y"
+#line 292 "lang.y"
                               {}
-#line 1783 "y.tab.c"
+#line 1806 "y.tab.c"
     break;
 
   case 64: /* exp: exp INF exp  */
-#line 270 "lang.y"
+#line 293 "lang.y"
                               {}
-#line 1789 "y.tab.c"
+#line 1812 "y.tab.c"
     break;
 
   case 65: /* exp: exp SUP exp  */
-#line 271 "lang.y"
+#line 294 "lang.y"
                               {}
-#line 1795 "y.tab.c"
+#line 1818 "y.tab.c"
     break;
 
   case 66: /* exp: exp EQUAL exp  */
-#line 272 "lang.y"
+#line 295 "lang.y"
                               {}
-#line 1801 "y.tab.c"
+#line 1824 "y.tab.c"
     break;
 
   case 67: /* exp: exp DIFF exp  */
-#line 273 "lang.y"
+#line 296 "lang.y"
                               {}
-#line 1807 "y.tab.c"
+#line 1830 "y.tab.c"
     break;
 
   case 68: /* exp: exp AND exp  */
-#line 274 "lang.y"
+#line 297 "lang.y"
                               {}
-#line 1813 "y.tab.c"
+#line 1836 "y.tab.c"
     break;
 
   case 69: /* exp: exp OR exp  */
-#line 275 "lang.y"
+#line 298 "lang.y"
                               {}
-#line 1819 "y.tab.c"
+#line 1842 "y.tab.c"
     break;
 
   case 70: /* app: fid PO args PF  */
-#line 282 "lang.y"
+#line 305 "lang.y"
                               {}
-#line 1825 "y.tab.c"
+#line 1848 "y.tab.c"
     break;
 
   case 71: /* fid: ID  */
-#line 285 "lang.y"
+#line 308 "lang.y"
                               {}
-#line 1831 "y.tab.c"
+#line 1854 "y.tab.c"
     break;
 
   case 72: /* args: arglist  */
-#line 287 "lang.y"
+#line 310 "lang.y"
                               {}
-#line 1837 "y.tab.c"
+#line 1860 "y.tab.c"
     break;
 
   case 73: /* args: %empty  */
-#line 288 "lang.y"
+#line 311 "lang.y"
                               {}
-#line 1843 "y.tab.c"
+#line 1866 "y.tab.c"
     break;
 
   case 74: /* arglist: arglist VIR exp  */
-#line 291 "lang.y"
+#line 314 "lang.y"
                               {}
-#line 1849 "y.tab.c"
+#line 1872 "y.tab.c"
     break;
 
   case 75: /* arglist: exp  */
-#line 292 "lang.y"
+#line 315 "lang.y"
                               {}
-#line 1855 "y.tab.c"
+#line 1878 "y.tab.c"
     break;
 
 
-#line 1859 "y.tab.c"
+#line 1882 "y.tab.c"
 
       default: break;
     }
@@ -2048,7 +2071,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 297 "lang.y"
+#line 320 "lang.y"
  
 int main () {
 

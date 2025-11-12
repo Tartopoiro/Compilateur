@@ -70,6 +70,29 @@ char * type2string (int c) {
     }  
 };
 
+int expressionPrinter(int t1, char * op, int t2){
+  //Si les types different alors float obligatoire
+  if(t1 != t2){
+    if(t1 != INT){
+      printf("I2F2\n");
+    }else if(t2 != INT){
+      printf("I2F1\n");
+    }else{
+      printf("!!! CAST ERROR IN EXPRESSION PRINTER !!!");
+    }
+    printf("%sF\n",op);
+    return FLOAT;
+  //identique et INT
+  }else if(t1 == INT){
+    printf("%sI\n",op);
+    return INT;
+  //identique et float
+  }else{
+    printf("%sF\n",op);
+    return FLOAT;
+  }
+}
+
  // dirty trick to end function init_glob_var() definition (see rule po : PO)
 void end_glob_var_decl(){
   static int unfinished=1;
@@ -253,15 +276,15 @@ exp
 // V.1 Exp. arithmetiques
 : MOINS exp %prec UNA         {}
          // -x + y lue comme (- x) + y  et pas - (x + y)
-| exp PLUS exp                {printf("ADD\n");}
-| exp MOINS exp               {printf("SUB\n");}
-| exp STAR exp                {printf("MULT\n");}
-| exp DIV exp                 {printf("DIV\n");}
-| PO exp PF                   {}
-| ID                          {}
+| exp PLUS exp                {$$=expressionPrinter($1,"ADD",$3);}
+| exp MOINS exp               {$$=expressionPrinter($1,"SUB",$3);}
+| exp STAR exp                {$$=expressionPrinter($1,"MULT",$3);}
+| exp DIV exp                 {$$=expressionPrinter($1,"DIV",$3);}
+| PO exp PF                   {}//A revoir
+| ID                          {}//A revoir
 | app                         {}
-| NUM                         {printf("LOADI %d\n",$1);}
-| DEC                         {printf("LOADF %f\n",$1);}
+| NUM                         {printf("LOADI(%d)\n",$1);$$=INT;}
+| DEC                         {printf("LOADF(%f)\n",$1);$$=FLOAT;}
 
 
 // V.2. Booléens

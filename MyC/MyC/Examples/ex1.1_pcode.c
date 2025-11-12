@@ -16,7 +16,8 @@ void init_glob_var(){
 
 void pcode_main()
 {
-LOADI 1
-LOADF 2.000000
-ADD
+LOADI(1)
+LOADF(2.000000)
+I2F1
+ADDF
 }
