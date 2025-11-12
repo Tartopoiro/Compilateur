@@ -1,0 +1,16 @@
+int x;
+void main(){
+int y;
+x = 3;
+{
+int z1;
+z1 = 4;
+y = z1;
+}
+{
+int z2;
+z2 = 5;
+y = z2;
+}
+y;
+}

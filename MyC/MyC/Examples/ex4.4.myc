@@ -1,0 +1,11 @@
+int x,y,z;
+void main(){
+x=1;
+y=10;
+z=5;
+while (x < y) {
+  if (z > x) z = z+y;
+  else z = z-y;
+z;
+}
+}
