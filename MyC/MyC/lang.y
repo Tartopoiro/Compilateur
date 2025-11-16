@@ -93,6 +93,18 @@ int expressionPrinter(int t1, char * op, int t2){
   }
 }
 
+char whichType(int t){
+  switch(t){
+    case INT:
+      return 'I';
+    case FLOAT:
+      return 'F';
+    default:
+      return 'V'; //error
+  }
+
+  }
+
  // dirty trick to end function init_glob_var() definition (see rule po : PO)
 void end_glob_var_decl(){
   static int unfinished=1;
@@ -125,7 +137,7 @@ glob_decl_list : glob_var_list glob_fun_list {}
 
 glob_var_list : glob_var_list decl PV {}
 | {printf("void init_glob_var(){\n"); // starting  function init_glob_var() definition in target code
- }
+}
 ;
 
 glob_fun_list : glob_fun_list fun {}
@@ -181,7 +193,7 @@ decl_list : decl_list decl PV   {}
 decl: var_decl                  {}
 ;
 
-var_decl : type vlist          {}
+var_decl : type vlist          {printf("LOAD%c(0)",whichType($1));}
 ;
 
 vlist: vlist vir ID            {} // récursion gauche pour traiter les variables déclararées de gauche à droite
@@ -228,7 +240,7 @@ af : AF                       {}
 
 // IV.1 Affectations
 
-aff : ID EQ exp               {}
+aff : ID EQ exp               {printf("LOAD(0)\nSTORE\n");}
 ;
 
 
@@ -281,7 +293,7 @@ exp
 | exp STAR exp                {$$=expressionPrinter($1,"MULT",$3);}
 | exp DIV exp                 {$$=expressionPrinter($1,"DIV",$3);}
 | PO exp PF                   {}//A revoir
-| ID                          {}//A revoir
+| ID                          {printf("LOADI(0)\nLOAD\n");}//A revoir
 | app                         {}
 | NUM                         {printf("LOADI(%d)\n",$1);$$=INT;}
 | DEC                         {printf("LOADF(%f)\n",$1);$$=FLOAT;}
