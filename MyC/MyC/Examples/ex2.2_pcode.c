@@ -1,4 +1,4 @@
-// Begin PCode Header
+// PCode Header
 #include "PCode.h"
 
 void pcode_main();
@@ -9,7 +9,7 @@ init_glob_var();
 pcode_main();
 return stack[sp-1].int_value;
 }
-// End PCode Header
+
 
 void init_glob_var(){
 }
@@ -20,8 +20,8 @@ LOADI(2)
 MULTI
 LOADF(3.500000)
 LOADI(4)
-I2F2 // converting second arg to float
+I2F2
 MULTF
-I2F1 // converting first arg to float
+I2F1
 ADDF
 }

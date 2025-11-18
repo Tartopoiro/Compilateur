@@ -14,8 +14,7 @@ return stack[sp-1].int_value;
 void init_glob_var(){
 }
 
-void pcode_main()
-{
+void pcode_main() {
 LOADI(1)
 LOADI(2)
 MULTI

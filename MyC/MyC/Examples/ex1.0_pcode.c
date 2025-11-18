@@ -14,7 +14,6 @@ return stack[sp-1].int_value;
 void init_glob_var(){
 }
 
-void pcode_main()
-{
-LOADF 1.300000
+void pcode_main() {
+LOADF(1.300000)
 }

@@ -1,4 +1,4 @@
-// Begin PCode Header
+// PCode Header
 #include "PCode.h"
 
 void pcode_main();
@@ -9,66 +9,33 @@ init_glob_var();
 pcode_main();
 return stack[sp-1].int_value;
 }
-// End PCode Header
+
 
 void init_glob_var(){
-// Declare x of type int with offset 0 at depth 0
 LOADI(0)
-
-// Declare y of type int with offset 1 at depth 0
-LOADI(0)
-
-// Declare z of type int with offset 2 at depth 0
-LOADI(0)
-
+LOADI(1)
+LOADI(2)
 }
 
 void pcode_main() {
 LOADI(3)
-// Loading global var x adress (used at depth 1)
-LOADI(0) // loading offset 0 of variable x
-// Storing variable x (right) value
+LOADI(0)
 STORE
 LOADI(5)
-// Loading global var y adress (used at depth 1)
-LOADI(1) // loading offset 1 of variable y
-// Storing variable y (right) value
+LOADI(1)
 STORE
-// Debut conditionelle 0
-// Loading global var x adress (used at depth 1)
-LOADI(0) // loading offset 0 of variable x
-// Loading variable x (right) value
+LOADI(0)
 LOAD
-// Loading global var y adress (used at depth 1)
-LOADI(1) // loading offset 1 of variable y
-// Loading variable y (right) value
+LOADI(1)
 LOAD
-LTI
-IFN(False_0)
-// la condition 0 est vraie
-// Loading global var x adress (used at depth 1)
-LOADI(0) // loading offset 0 of variable x
-// Loading variable x (right) value
+LOADI(0)
 LOAD
-// Loading global var z adress (used at depth 1)
-LOADI(2) // loading offset 2 of variable z
-// Storing variable z (right) value
+LOADI(2)
 STORE
-GOTO(End_0)
-False_0:
-// la condition 0 est fausse
-// Loading global var y adress (used at depth 1)
-LOADI(1) // loading offset 1 of variable y
-// Loading variable y (right) value
+LOADI(1)
 LOAD
-// Loading global var z adress (used at depth 1)
-LOADI(2) // loading offset 2 of variable z
-// Storing variable z (right) value
+LOADI(2)
 STORE
-End_0:
-// Fin conditionelle 0
-// Loading global var z adress (used at depth 1)
-LOADI(2) // loading offset 2 of variable z
-// Loading variable z (right) value
+LOADI(2)
 LOAD
 }
