@@ -4,3 +4,4 @@ MyC/MyC/lang
 MyC/MyC/lex.yy.c
 MyC/MyC/y.output
 MyC/MyC/y.tab.*
+*.o
