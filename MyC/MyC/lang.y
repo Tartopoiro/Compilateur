@@ -15,6 +15,8 @@ void yyerror (char* s) {
   }
 		
 int depth=0; // block depth
+int offset=0; // current offset in the block
+int current_decl_type = -1; // type of the variables being declared
  
 
 %}
@@ -135,7 +137,7 @@ prog : glob_decl_list              {}
 glob_decl_list : glob_var_list glob_fun_list {}
 ;
 
-glob_var_list : glob_var_list decl PV {}
+glob_var_list : glob_var_list decl PV { current_decl_type = -1; } // reset current_decl_type après la déclaration des variables
 | {printf("void init_glob_var(){\n"); // starting  function init_glob_var() definition in target code
 }
 ;
@@ -154,7 +156,7 @@ po: PO {end_glob_var_decl();}  // dirty trick to end function init_glob_var() de
 fun_head : ID po PF            {
   // Pas de déclaration de fonction à l'intérieur de fonctions !
   if (depth>0) yyerror("Function must be declared at top level~!\n");
-  else printf("void pcode_%s()\n",$1);
+  else { printf("void pcode_%s()", $1); current_decl_type = -1; } // reset current_decl_type après la déclaration d'une fonction
   }
 
 | ID po params PF              {
@@ -173,7 +175,7 @@ vir : VIR                      {}
 fun_body : fao block faf       {}
 ;
 
-fao : AO                       {printf("{\n");}
+fao : AO                       {printf(" {\n");}
 ;
 faf : AF                       {printf("}\n");}
 ;
@@ -186,22 +188,30 @@ decl_list inst_list            {}
 
 // III. Declarations
 
-decl_list : decl_list decl PV   {} 
+decl_list : decl_list decl PV   { current_decl_type = -1; } // reset current_decl_type après chaque déclaration
 |                               {}
 ;
 
 decl: var_decl                  {}
 ;
 
-var_decl : type vlist          {printf("LOAD%c(0)",whichType($1));}
-;
+var_decl : type vlist ;
 
-vlist: vlist vir ID            {} // récursion gauche pour traiter les variables déclararées de gauche à droite
-| ID                           {}
+vlist: vlist vir ID            {
+                                  attribute a = makeSymbol(current_decl_type, offset++, depth);  /* créer le symbole */
+                                  set_symbol_value($3, a);
+                                  /* Emit init code for global var: reserve slot (address) */
+                                  printf("LOAD%c(%d)\n", whichType(a->type), a->offset);
+                                  }
+| ID                           {
+                                attribute a = makeSymbol(current_decl_type, offset++, depth);
+                                set_symbol_value($1, a);
+                                printf("LOAD%c(%d)\n", whichType(a->type), a->offset);
+                                  }
 ;
 
 type
-: typename                     {$$=$1;}
+: typename                     { $$ = $1; current_decl_type = $1; } // set current_decl_type pour la déclaration de variable
 ;
 
 typename // Utilisation des terminaux comme codage (entier) du type !!!
@@ -240,7 +250,19 @@ af : AF                       {}
 
 // IV.1 Affectations
 
-aff : ID EQ exp               {printf("LOAD(0)\nSTORE\n");}
+aff : ID EQ exp               {
+                                attribute a = get_symbol_value($1);
+                                /* $3 is the type_value returned by exp */
+                                if ($3 != a->type) {
+                                  /* convert RHS to LHS type when needed */
+                                  if (a->type == FLOAT && $3 == INT) {
+                                    printf("I2F2\n");
+                                  } else if (a->type == INT && $3 == FLOAT) {
+                                    printf("F2I2\n");
+                                  }
+                                }
+                                printf("LOADI(%d)\nSTORE\n", a->offset);
+                              }
 ;
 
 
@@ -293,7 +315,8 @@ exp
 | exp STAR exp                {$$=expressionPrinter($1,"MULT",$3);}
 | exp DIV exp                 {$$=expressionPrinter($1,"DIV",$3);}
 | PO exp PF                   {}//A revoir
-| ID                          {printf("LOADI(0)\nLOAD\n");}//A revoir
+| ID                          { attribute a = get_symbol_value($1);printf("LOADI(%d)\nLOAD\n", a->offset); $$ = a->type; } // set the expression type from symbol table
+                              // $$=a->type pour transmettre le type dans les expressions et éviter les conversions inutiles;
 | app                         {}
 | NUM                         {printf("LOADI(%d)\n",$1);$$=INT;}
 | DEC                         {printf("LOADF(%f)\n",$1);$$=FLOAT;}
