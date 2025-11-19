@@ -16,8 +16,14 @@ void yyerror (char* s) {
 		
 int depth=0; // block depth
 int offset=0; // current offset in the block
-int current_decl_type = -1; // type of the variables being declared
- 
+int current_type=-1; // to store the current type during variable declarations
+
+int label_count = 0; // label management for if/else
+int label_stack[256]; /* stack for False labels */ // Sert à gérer les if else imbriqués, stock les labels False
+int label_sp = 0;
+int end_stack[256];   /* stack for End labels (for if..else) */ // Sert à gérer les if else imbriqués, stock les labels End
+int end_sp = 0;
+  
 
 %}
 
@@ -137,7 +143,7 @@ prog : glob_decl_list              {}
 glob_decl_list : glob_var_list glob_fun_list {}
 ;
 
-glob_var_list : glob_var_list decl PV { current_decl_type = -1; } // reset current_decl_type après la déclaration des variables
+glob_var_list : glob_var_list decl PV { current_type = -1; } // reset current_decl_type après la déclaration des variables
 | {printf("void init_glob_var(){\n"); // starting  function init_glob_var() definition in target code
 }
 ;
@@ -156,7 +162,7 @@ po: PO {end_glob_var_decl();}  // dirty trick to end function init_glob_var() de
 fun_head : ID po PF            {
   // Pas de déclaration de fonction à l'intérieur de fonctions !
   if (depth>0) yyerror("Function must be declared at top level~!\n");
-  else { printf("void pcode_%s()", $1); current_decl_type = -1; } // reset current_decl_type après la déclaration d'une fonction
+  else { printf("void pcode_%s()", $1); current_type = -1; } // reset current_decl_type après la déclaration d'une fonction
   }
 
 | ID po params PF              {
@@ -188,7 +194,7 @@ decl_list inst_list            {}
 
 // III. Declarations
 
-decl_list : decl_list decl PV   { current_decl_type = -1; } // reset current_decl_type après chaque déclaration
+decl_list : decl_list decl PV   {}
 |                               {}
 ;
 
@@ -198,20 +204,25 @@ decl: var_decl                  {}
 var_decl : type vlist ;
 
 vlist: vlist vir ID            {
-                                  attribute a = makeSymbol(current_decl_type, offset++, depth);  /* créer le symbole */
+                                  attribute a = makeSymbol(current_type, offset++, depth);  // créer le symbole 
                                   set_symbol_value($3, a);
-                                  /* Emit init code for global var: reserve slot (address) */
-                                  printf("LOAD%c(%d)\n", whichType(a->type), a->offset);
+                                  int tpe=0;
+                                  if (a->type == FLOAT){
+                                    tpe=0.0;}
+                                  printf("LOAD%c(%d)\n", whichType(a->type),tpe);
                                   }
 | ID                           {
-                                attribute a = makeSymbol(current_decl_type, offset++, depth);
+                                attribute a = makeSymbol(current_type, offset++, depth);
                                 set_symbol_value($1, a);
-                                printf("LOAD%c(%d)\n", whichType(a->type), a->offset);
+                                int tpe=0;
+                                if (a->type == FLOAT){
+                                  tpe=0.0;}
+                                printf("LOAD%c(%d)\n", whichType(a->type), tpe);
                                   }
 ;
 
 type
-: typename                     { $$ = $1; current_decl_type = $1; } // set current_decl_type pour la déclaration de variable
+: typename                     { $$ = $1; current_type = $1;}
 ;
 
 typename // Utilisation des terminaux comme codage (entier) du type !!!
@@ -257,13 +268,15 @@ aff : ID EQ exp               {
                                   /* convert RHS to LHS type when needed */
                                   if (a->type == FLOAT && $3 == INT) {
                                     printf("I2F2\n");
-                                  } else if (a->type == INT && $3 == FLOAT) {
-                                    printf("F2I2\n");
+                                    printf("LOADF(%d)\nSTORE\n", a->offset);
                                   }
+                                  if (a->type == INT && $3 == FLOAT) {
+                                    printf("//!!! CAST ERROR IN AFFECTION !!!");
+                                  }
+                                  
                                 }
-                                printf("LOADI(%d)\nSTORE\n", a->offset);
+                                printf("LOAD%c(%d)\nSTORE\n", whichType(a->type), a->offset);
                               }
-;
 
 
 // IV.2 Return
@@ -325,7 +338,7 @@ exp
 // V.2. Booléens
 
 | NOT exp %prec UNA           {}
-| exp INF exp                 {}
+| exp INF exp                 {printf("LT%c\n", whichType($1));}
 | exp SUP exp                 {}
 | exp EQUAL exp               {}
 | exp DIFF exp                {}
