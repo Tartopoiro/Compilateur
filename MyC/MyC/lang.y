@@ -206,19 +206,23 @@ var_decl : type vlist ;
 vlist: vlist vir ID            {
                                   attribute a = makeSymbol(current_type, offset++, depth);  // créer le symbole 
                                   set_symbol_value($3, a);
-                                  int tpe=0;
                                   if (a->type == FLOAT){
-                                    tpe=0.0;}
-                                  printf("LOAD%c(%d)\n", whichType(a->type),tpe);
+                                    printf("LOADF(0.0)\n");
+                                    }
+                                    else if(a->type == INT){
+                                  printf("LOADI(0)\n");
+                                    }
                                   }
 | ID                           {
                                 attribute a = makeSymbol(current_type, offset++, depth);
                                 set_symbol_value($1, a);
-                                int tpe=0;
                                 if (a->type == FLOAT){
-                                  tpe=0.0;}
-                                printf("LOAD%c(%d)\n", whichType(a->type), tpe);
+                                  printf("LOADF(0.0)\n");
                                   }
+                                  else if(a->type == INT){
+                                printf("LOADI(0)\n");
+                                  }
+                                }
 ;
 
 type
@@ -268,14 +272,16 @@ aff : ID EQ exp               {
                                   /* convert RHS to LHS type when needed */
                                   if (a->type == FLOAT && $3 == INT) {
                                     printf("I2F2\n");
-                                    printf("LOADF(%d)\nSTORE\n", a->offset);
+                                    printf("LOADI(%d)\nSTORE\n", a->offset);
                                   }
                                   if (a->type == INT && $3 == FLOAT) {
                                     printf("//!!! CAST ERROR IN AFFECTION !!!");
                                   }
                                   
                                 }
-                                printf("LOAD%c(%d)\nSTORE\n", whichType(a->type), a->offset);
+                                else{
+                                  printf("LOADI(%d)\nSTORE\n", a->offset);
+                                }
                               }
 
 
