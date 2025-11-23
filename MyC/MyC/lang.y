@@ -14,15 +14,10 @@ void yyerror (char* s) {
   exit(0);
   }
 		
-int depth=0; // block depth
-int offset=0; // current offset in the block
-int current_type=-1; // to store the current type during variable declarations
-
-int label_count = 0; // label management for if/else
-int label_stack[256]; /* stack for False labels */ // Sert à gérer les if else imbriqués, stock les labels False
-int label_sp = 0;
-int end_stack[256];   /* stack for End labels (for if..else) */ // Sert à gérer les if else imbriqués, stock les labels End
-int end_sp = 0;
+int depth=0; // depth actuelle
+int offset=0; // offset actuel
+int offset_stack[256]={0}; // liste pour stocker l'offset max pour chaque depth : offset_stack[depth] contient l'offset max à depth
+int offset_sp=0; // pointeur pour mémoriser où on en est dans offset_stack
   
 
 %}
@@ -143,7 +138,7 @@ prog : glob_decl_list              {}
 glob_decl_list : glob_var_list glob_fun_list {}
 ;
 
-glob_var_list : glob_var_list decl PV { current_type = -1; } // reset current_decl_type après la déclaration des variables
+glob_var_list : glob_var_list decl PV {} // reset current_decl_type après la déclaration des variables
 | {printf("void init_glob_var(){\n"); // starting  function init_glob_var() definition in target code
 }
 ;
@@ -162,7 +157,7 @@ po: PO {end_glob_var_decl();}  // dirty trick to end function init_glob_var() de
 fun_head : ID po PF            {
   // Pas de déclaration de fonction à l'intérieur de fonctions !
   if (depth>0) yyerror("Function must be declared at top level~!\n");
-  else { printf("void pcode_%s()", $1); current_type = -1; } // reset current_decl_type après la déclaration d'une fonction
+  else { printf("void pcode_%s()", $1);} // reset current_decl_type après la déclaration d'une fonction
   }
 
 | ID po params PF              {
@@ -181,9 +176,22 @@ vir : VIR                      {}
 fun_body : fao block faf       {}
 ;
 
-fao : AO                       {printf(" {\n");}
+fao : AO {
+  depth++; // on entre dans un nouveau bloc
+  /* Chaque instance de bloc réinitialise son compteur d'offset :
+     depth 0 -> offsets globaux démarrent à 0
+     depth >0 -> offsets locaux démarrent à 1
+  */
+  if (depth == 0) offset_stack[depth] = 0; else offset_stack[depth] = 1;
+  offset = offset_stack[depth]; // initialise offset à l'offset de la depth courante
+  printf(" {\n");
+      }
 ;
-faf : AF                       {printf("}\n");}
+faf : AF {
+  depth--; // on sort du bloc
+  offset = offset_stack[depth]; // on reset l'offset à celui de la depth précédente
+  printf("}\n");
+      }
 ;
 
 
@@ -204,8 +212,10 @@ decl: var_decl                  {}
 var_decl : type vlist ;
 
 vlist: vlist vir ID            {
-                                  attribute a = makeSymbol(current_type, offset++, depth);  // créer le symbole 
+                                  attribute a = makeSymbol($<type_value>0, offset_stack[depth]++, depth);  // créer le symbole 
                                   set_symbol_value($3, a);
+                                  // garder offset à jour 
+                                  offset = offset_stack[depth];
                                   if (a->type == FLOAT){
                                     printf("LOADF(0.0)\n");
                                     }
@@ -214,8 +224,9 @@ vlist: vlist vir ID            {
                                     }
                                   }
 | ID                           {
-                                attribute a = makeSymbol(current_type, offset++, depth);
+                                attribute a = makeSymbol($<type_value>0, offset_stack[depth]++, depth);
                                 set_symbol_value($1, a);
+                                offset = offset_stack[depth];
                                 if (a->type == FLOAT){
                                   printf("LOADF(0.0)\n");
                                   }
@@ -226,7 +237,7 @@ vlist: vlist vir ID            {
 ;
 
 type
-: typename                     { $$ = $1; current_type = $1;}
+: typename                     { $$ = $1;}
 ;
 
 typename // Utilisation des terminaux comme codage (entier) du type !!!
@@ -255,11 +266,24 @@ ao block af                   {}
 ;
 
 // Accolades explicites pour gerer l'entrée et la sortie d'un sous-bloc
-
-ao : AO                       {}
+ao : AO                       { printf("SAVEBP\n");
+                                // on entre dans un nouveau bloc
+                                depth++;
+                                /*
+                                   depth 0 -> offsets globaux démarrent à 0
+                                   depth >0 -> offsets locaux démarrent à 1
+                                */
+                                if (depth == 0) offset_stack[depth] = 0; else offset_stack[depth] = 1;
+                                offset = offset_stack[depth];
+                                }
 ;
 
-af : AF                       {}
+af : AF                       { printf("RESTOREBP\n");
+                                // on sort d'un bloc
+                                offset_stack[depth] = offset; // on sauvegarde l'offset courant pour cette depth
+                                depth--;
+                                offset = offset_stack[depth]; // on reset l'offset à celui de la depth précédente
+                              }
 ;
 
 
@@ -267,22 +291,31 @@ af : AF                       {}
 
 aff : ID EQ exp               {
                                 attribute a = get_symbol_value($1);
-                                /* $3 is the type_value returned by exp */
+                                // $3 est le type_value retourné par exp 
                                 if ($3 != a->type) {
-                                  /* convert RHS to LHS type when needed */
                                   if (a->type == FLOAT && $3 == INT) {
                                     printf("I2F2\n");
-                                    printf("LOADI(%d)\nSTORE\n", a->offset);
                                   }
                                   if (a->type == INT && $3 == FLOAT) {
                                     printf("//!!! CAST ERROR IN AFFECTION !!!");
                                   }
-                                  
                                 }
-                                else{
+                                if (a->depth == 0) { // variable globale
                                   printf("LOADI(%d)\nSTORE\n", a->offset);
+                                } else if (a->depth == depth) {
+                                  // locale au bloc actuel
+                                  printf("LOADBP\nSHIFT(%d)\nSTORE\n", a->offset);
+                                } else if (a->depth < depth) {
+                                  // locale dans un bloc englobant : grimper la chaîne saved-bp
+                                  printf("LOADBP\n");
+                                  int climbs = depth - a->depth;
+                                  while (climbs > 0) { printf("LOAD\n"); climbs--; } // on LOAD jusq'au bon bloc
+                                  printf("SHIFT(%d)\nSTORE\n", a->offset);
+                                } else {
+                                  printf("// NON ACCESSIBLE VARIABLE !!!\n");
                                 }
-                              }
+                                }
+                                
 
 
 // IV.2 Return
@@ -334,7 +367,22 @@ exp
 | exp STAR exp                {$$=expressionPrinter($1,"MULT",$3);}
 | exp DIV exp                 {$$=expressionPrinter($1,"DIV",$3);}
 | PO exp PF                   {}//A revoir
-| ID                          { attribute a = get_symbol_value($1);printf("LOADI(%d)\nLOAD\n", a->offset); $$ = a->type; } // set the expression type from symbol table
+| ID                          { attribute a = get_symbol_value($1);
+                                if (a->depth == 0) { /* global */
+                                  printf("LOADI(%d)\nLOAD\n", a->offset);
+                                } else if (a->depth == depth) {
+                                  // locale au bloc actuel
+                                  printf("LOADBP\nSHIFT(%d)\nLOAD\n", a->offset);
+                                } else if (a->depth < depth) {
+                                  // locale dans un bloc englobant : grimper la chaîne saved-bp
+                                  printf("LOADBP\n");
+                                  int climbs = depth - a->depth;
+                                  while (climbs > 0) { printf("LOAD\n"); climbs--; }
+                                  printf("SHIFT(%d)\nLOAD\n", a->offset);
+                                } else {
+                                  printf("// NON ACCESSIBLE VARIABLE !!!\n");
+                                }
+                                $$ = a->type; }
                               // $$=a->type pour transmettre le type dans les expressions et éviter les conversions inutiles;
 | app                         {}
 | NUM                         {printf("LOADI(%d)\n",$1);$$=INT;}
@@ -398,5 +446,5 @@ printf("%s\n",header); // ouput header
 return yyparse (); // output your compilation
  
  
-} 
+}
 
