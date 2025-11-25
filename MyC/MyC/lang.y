@@ -18,11 +18,8 @@ int depth=0; // block depth
 int offset=0; // current offset in the block
 int current_type=-1; // to store the current type during variable declarations
 
-int label_count = 0; // label management for if/else
-int label_stack[256]; /* stack for False labels */ // Sert à gérer les if else imbriqués, stock les labels False
-int label_sp = 0;
-int end_stack[256];   /* stack for End labels (for if..else) */ // Sert à gérer les if else imbriqués, stock les labels End
-int end_sp = 0;
+int label_count=0; 
+
   
 
 %}
@@ -296,20 +293,19 @@ ret : RETURN exp              {}
 //           avec ELSE en entrée (voir y.output)
 
 cond :
-if bool_cond inst  elsop       {}
+if bool_cond inst  elsop       {printf("//cond : if bool_cond inst  elsop\n");}
 ;
 
-elsop : else inst              {}
+elsop : else inst              {printf("//elsop : else inst\n");}
 |                  %prec IFX   {} // juste un "truc" pour éviter le message de conflit shift / reduce
 ;
 
-bool_cond : PO exp PF         {}
+bool_cond : PO exp PF         {printf("//bool_cond\n");}
+
+if : IF                       {printf("//if : IF\n");}
 ;
 
-if : IF                       {}
-;
-
-else : ELSE                   {}
+else : ELSE                   {printf("//else : ELSE\n");}
 ;
 
 // IV.4. Iterations
@@ -343,14 +339,14 @@ exp
 
 // V.2. Booléens
 
-| NOT exp %prec UNA           {}
-| exp INF exp                 {printf("LT%c\n", whichType($1));}
-| exp SUP exp                 {}
-| exp EQUAL exp               {}
-| exp DIFF exp                {}
-| exp AND exp                 {}
-| exp OR exp                  {}
-
+//on estime qu'un booleen est de type int, je remonde int dans $$ au besoin
+| NOT exp %prec UNA           {printf("NOT\n");$$=INT;}
+| exp INF exp                 {printf("LT%c\n", whichType($1));$$=INT;}
+| exp SUP exp                 {printf("GT%c\n", whichType($1));$$=INT;}
+| exp EQUAL exp               {printf("EQ%c\n", whichType($1));$$=INT;}
+| exp DIFF exp                {printf("NE%c\n", whichType($1));$$=INT;}
+| exp AND exp                 {printf("AND\n");$$=INT;}
+| exp OR exp                  {printf("OR\n");$$=INT;}
 ;
 
 // V.3 Applications de fonctions
